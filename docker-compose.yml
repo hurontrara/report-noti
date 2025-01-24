@@ -1,0 +1,43 @@
+services:
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    image: gateway-image
+    container_name: gateway-container
+    ports:
+      - "8761:8761"
+    networks:
+      - report-noti
+
+  biz:
+    build:
+      context: ./biz
+      dockerfile: Dockerfile
+    image: biz-image
+    container_name: biz-container
+    ports:
+      - "8081:8081"
+    networks:
+      - report-noti
+    depends_on:
+      gateway:
+        condition: service_started
+
+  etl:
+    build:
+      context: ./etl
+      dockerfile: Dockerfile
+    image: etl-image
+    container_name: etl-container
+    ports:
+      - "8082:8082"
+    networks:
+      - report-noti
+    depends_on:
+      gateway:
+        condition: service_started
+
+networks:
+  report-noti:
+    driver: bridge
