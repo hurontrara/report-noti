@@ -1,4 +1,4 @@
-package ai.reportnoti.biz.linkTest.db;
+package ai.reportnoti.etl.linkTest.connection;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Document(collection = "sample_collection")
 @Getter
 @Setter
-public class SampleCollection {
+public class SampleDocument {
     @Id
     private String id;
 
