@@ -6,19 +6,18 @@ import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@RequestMapping("/batch")
 @RestController
 @RequiredArgsConstructor
-public class BatchController {
+public class BatchTestController {
 
     private final JobLauncher jobLauncher;
     private final JobRegistry jobRegistry;
 
-    @GetMapping("/first")
+
+    @GetMapping("/first-batch")
     public String firstApi(@RequestParam("value") String value) throws Exception {
 
         JobParameters jobParameters = new JobParametersBuilder()
@@ -27,7 +26,7 @@ public class BatchController {
 
         jobLauncher.run(jobRegistry.getJob("firstJob"), jobParameters);
 
+
         return "ok";
     }
-
 }

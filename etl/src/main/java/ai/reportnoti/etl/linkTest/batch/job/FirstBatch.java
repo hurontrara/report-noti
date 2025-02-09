@@ -1,39 +1,48 @@
 package ai.reportnoti.etl.linkTest.batch.job;
 
-import ai.reportnoti.etl.linkTest.batch.document.AfterDocument;
-import ai.reportnoti.etl.linkTest.batch.document.BeforeDocument;
+import ai.reportnoti.etl.linkTest.batch.entity.AfterEntity;
+import ai.reportnoti.etl.linkTest.batch.entity.BeforeEntity;
+import ai.reportnoti.etl.linkTest.batch.repository.AfterRepository;
+import ai.reportnoti.etl.linkTest.batch.repository.BeforeRepository;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.data.MongoItemWriter;
-import org.springframework.batch.item.data.MongoPagingItemReader;
+import org.springframework.batch.item.data.RepositoryItemReader;
+import org.springframework.batch.item.data.RepositoryItemWriter;
+import org.springframework.batch.item.data.builder.RepositoryItemReaderBuilder;
+import org.springframework.batch.item.data.builder.RepositoryItemWriterBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 public class FirstBatch {
 
     private final JobRepository jobRepository;
     private final PlatformTransactionManager platformTransactionManager;
-    private final MongoTemplate mongoTemplate;
 
-    public FirstBatch(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager, MongoTemplate mongoTemplate) {
+    private final BeforeRepository beforeRepository;
+    private final AfterRepository afterRepository;
+
+    public FirstBatch(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager, BeforeRepository beforeRepository, AfterRepository afterRepository) {
+
         this.jobRepository = jobRepository;
         this.platformTransactionManager = platformTransactionManager;
-        this.mongoTemplate = mongoTemplate;
+        this.beforeRepository = beforeRepository;
+        this.afterRepository = afterRepository;
     }
 
     @Bean
     public Job firstJob() {
+
+        System.out.println("first job");
+
         return new JobBuilder("firstJob", jobRepository)
                 .start(firstStep())
                 .build();
@@ -41,8 +50,11 @@ public class FirstBatch {
 
     @Bean
     public Step firstStep() {
+
+        System.out.println("first step");
+
         return new StepBuilder("firstStep", jobRepository)
-                .<BeforeDocument, AfterDocument>chunk(10, platformTransactionManager)
+                .<BeforeEntity, AfterEntity> chunk(10, platformTransactionManager)
                 .reader(beforeReader())
                 .processor(middleProcessor())
                 .writer(afterWriter())
@@ -50,33 +62,39 @@ public class FirstBatch {
     }
 
     @Bean
-    public MongoPagingItemReader<BeforeDocument> beforeReader() {
-        MongoPagingItemReader<BeforeDocument> reader = new MongoPagingItemReader<>();
-        reader.setName("beforeReader");
-        reader.setTemplate(mongoTemplate);
-        reader.setTargetType(BeforeDocument.class);
-        reader.setQuery(new BasicQuery("{}"));
-        reader.setSort(new HashMap<>() {{
-            put("_id", Sort.Direction.ASC);
-        }});
-        reader.setPageSize(10);
-        return reader;
+    public RepositoryItemReader<BeforeEntity> beforeReader() {
+
+        return new RepositoryItemReaderBuilder<BeforeEntity>()
+                .name("beforeReader")
+                .pageSize(10)
+                .methodName("findAll")
+                .repository(beforeRepository)
+                .sorts(Map.of("id", Sort.Direction.ASC))
+                .build();
     }
 
     @Bean
-    public ItemProcessor<BeforeDocument, AfterDocument> middleProcessor() {
-        return item -> {
-            AfterDocument afterDocument = new AfterDocument();
-            afterDocument.setName(item.getName());
-            return afterDocument;
+    public ItemProcessor<BeforeEntity, AfterEntity> middleProcessor() {
+
+        return new ItemProcessor<BeforeEntity, AfterEntity>() {
+
+            @Override
+            public AfterEntity process(BeforeEntity item) throws Exception {
+
+                AfterEntity afterEntity = new AfterEntity();
+                afterEntity.setUsername(item.getUsername());
+
+                return afterEntity;
+            }
         };
     }
 
-    public MongoItemWriter<AfterDocument> afterWriter() {
-        MongoItemWriter<AfterDocument> writer = new MongoItemWriter<>();
-        writer.setTemplate(mongoTemplate);
-        writer.setCollection("after_collection");
-        return writer;
-    }
+    @Bean
+    public RepositoryItemWriter<AfterEntity> afterWriter() {
 
+        return new RepositoryItemWriterBuilder<AfterEntity>()
+                .repository(afterRepository)
+                .methodName("save")
+                .build();
+    }
 }

@@ -15,7 +15,7 @@ public class MetaDBConfig {
 
     @Primary
     @Bean
-    @ConfigurationProperties(prefix = "spring.primary")
+    @ConfigurationProperties(prefix = "spring.datasource-meta")
     public DataSource metaDBSource() {
 
         return DataSourceBuilder.create().build();
