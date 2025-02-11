@@ -41,8 +41,6 @@ public class FirstBatch {
     @Bean
     public Job firstJob() {
 
-        System.out.println("first job");
-
         return new JobBuilder("firstJob", jobRepository)
                 .start(firstStep())
                 .build();
@@ -50,8 +48,6 @@ public class FirstBatch {
 
     @Bean
     public Step firstStep() {
-
-        System.out.println("first step");
 
         return new StepBuilder("firstStep", jobRepository)
                 .<BeforeEntity, AfterEntity> chunk(10, platformTransactionManager)

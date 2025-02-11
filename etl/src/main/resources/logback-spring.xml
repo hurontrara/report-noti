@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+    <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook" />
+    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
+
+    <springProperty name="AWS_ACCESS_KEY" source="cloud.aws.credentials.cloudwatch.access-key"/>
+    <springProperty name="AWS_SECRET_KEY" source="cloud.aws.credentials.cloudwatch.secret-key"/>
+
+    <property name="CONSOLE_LOG_PATTERN" value="%green(%d{yyyy-MM-dd HH:mm:ss.SSS}) %magenta([%thread]) %clr(%5level) %cyan(%logger) - %yellow(%msg%n)" />
+    <property name="FILE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %5level %logger - %msg%n" />
+    <property name="CLOUDWATCH_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %5level %logger - %msg%n" />
+
+    <appender name="AWS_CLOUD_WATCH_LOG" class="ca.pjer.logback.AwsLogsAppender">
+        <encoder>
+            <pattern>${CLOUDWATCH_LOG_PATTERN}</pattern>
+        </encoder>
+
+        <springProfile name="default">
+            <LogGroupName>report-noti-local</LogGroupName>
+            <retentionTimeDays>1</retentionTimeDays>
+        </springProfile>
+        <springProfile name="dev|stg">
+            <LogGroupName>report-noti-dev</LogGroupName>
+            <retentionTimeDays>7</retentionTimeDays>
+        </springProfile>
+        <springProfile name="prod">
+            <LogGroupName>report-noti-prod</LogGroupName>
+            <retentionTimeDays>30</retentionTimeDays>
+        </springProfile>
+
+        <LogStreamUuidPrefix>LOG-</LogStreamUuidPrefix>
+        <LogRegion>ap-northeast-2</LogRegion>
+        <maxBatchLogEvents>50</maxBatchLogEvents>
+        <maxFlushTimeMillis>30000</maxFlushTimeMillis>
+        <maxBlockTimeMillis>5000</maxBlockTimeMillis>
+
+        <accessKeyId>${AWS_ACCESS_KEY}</accessKeyId>
+        <secretAccessKey>${AWS_SECRET_KEY}</secretAccessKey>
+    </appender>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>./log/%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <springProfile name="default">
+        <logger name="ai.reportnoti.etl" level="DEBUG" />
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+            <appender-ref ref="FILE" />
+            <appender-ref ref="AWS_CLOUD_WATCH_LOG" />
+        </root>
+    </springProfile>
+    <springProfile name="dev|stg">
+        <root level="INFO">
+            <appender-ref ref="AWS_CLOUD_WATCH_LOG" />
+        </root>
+    </springProfile>
+    <springProfile name="prod">
+        <root level="ERROR">
+            <appender-ref ref="AWS_CLOUD_WATCH_LOG" />
+        </root>
+    </springProfile>
+
+</configuration>
