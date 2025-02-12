@@ -6,9 +6,9 @@
     <springProperty name="AWS_ACCESS_KEY" source="cloud.aws.credentials.cloudwatch.access-key"/>
     <springProperty name="AWS_SECRET_KEY" source="cloud.aws.credentials.cloudwatch.secret-key"/>
 
-    <property name="CONSOLE_LOG_PATTERN" value="%green(%d{yyyy-MM-dd HH:mm:ss.SSS}) %magenta([%thread]) %clr(%5level) %cyan(%logger) - %yellow(%msg%n)" />
-    <property name="FILE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %5level %logger - %msg%n" />
-    <property name="CLOUDWATCH_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %5level %logger - %msg%n" />
+    <property name="CONSOLE_LOG_PATTERN" value="%green(%d{yyyy-MM-dd HH:mm:ss.SSS}) %boldYellow([%X{requestId:-startup}]) %magenta([%thread]) %clr(%5level) %cyan(%logger) - %msg%n" />
+    <property name="FILE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{request_id:-startup}] [%thread] %5level %logger - %msg%n" />
+    <property name="CLOUDWATCH_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{request_id:-startup}] [%thread] %5level %logger - %msg%n" />
 
     <appender name="AWS_CLOUD_WATCH_LOG" class="ca.pjer.logback.AwsLogsAppender">
         <encoder>
